@@ -110,7 +110,9 @@ function updateStyles(){
                     
                     });
                 } catch (error) {
-                    console.error(file + " \x1b[31merror\x1b[0m");
+                    console.error("\x1b[31m#### SCSS ERROR - " + file + " ####\x1b[0m");
+                    console.log(error);
+                    console.error("\x1b[31m########\x1b[0m");
                 }
                 
             }           
