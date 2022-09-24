@@ -86,29 +86,34 @@ function updateStyles(){
                         sourceMap: true
                     });
 
-                    //update sources with relative path
-                    let tmpSrcs = [];
-                    res.sourceMap.sources.forEach(elm => {
-                        let tmpEl = elm.split("/");
-                        tmpSrcs.push("../scss/" + tmpEl[tmpEl.length-1]);
-                    });
-                    res.sourceMap.sources = tmpSrcs;
+                    if(res.css!=''){
+                        //update sources with relative path
+                        let tmpSrcs = [];
+                        res.sourceMap.sources.forEach(elm => {
+                            let tmpEl = elm.split("/");
+                            tmpSrcs.push("../scss/" + tmpEl[tmpEl.length-1]);
+                        });
+                        res.sourceMap.sources = tmpSrcs;
+    
+                        postcss([cssnano]).process(res.css,  {
+                            from: null, 
+                            to: null,
+                            map: {
+                                prev: JSON.stringify(res.sourceMap)
+                            }
+                        }).then(result => {
+                            let cssfilename = file.replace("./scss/","./css/").replace(".scss",".css");
+                            fs.writeFileSync(cssfilename, result.css + "\n/*# sourceMappingURL=" + cssfilename.replace("./css/","") + ".map */");
+                            fs.writeFileSync(cssfilename + '.map', result.map.toString());
+                            let diff = ((performance.now() - startTime)/1000).toFixed(3);
+                            let size = (fs.statSync(cssfilename).size / 1024).toFixed(2);
+                            console.log(cssfilename + " \x1b[32mupdated\x1b[0m " + size + ' KB :: ' + diff + 'sec');
+                        
+                        });
+                    }else{
+                        console.log("\x1b[31mSCSS ERROR - " + file + " is empty\x1b[0m");
+                    }
 
-                    postcss([cssnano]).process(res.css,  {
-                        from: null, 
-                        to: null,
-                        map: {
-                            prev: JSON.stringify(res.sourceMap)
-                        }
-                    }).then(result => {
-                        let cssfilename = file.replace("./scss/","./css/").replace(".scss",".css");
-                        fs.writeFileSync(cssfilename, result.css + "\n/*# sourceMappingURL=" + cssfilename.replace("./css/","") + ".map */");
-                        fs.writeFileSync(cssfilename + '.map', result.map.toString());
-                        let diff = ((performance.now() - startTime)/1000).toFixed(3);
-                        let size = (fs.statSync(cssfilename).size / 1024).toFixed(2);
-                        console.log(cssfilename + " \x1b[32mupdated\x1b[0m " + size + ' KB :: ' + diff + 'sec');
-                    
-                    });
                 } catch (error) {
                     console.error("\x1b[31m#### SCSS ERROR - " + file + " ####\x1b[0m");
                     console.log(error);
