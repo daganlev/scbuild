@@ -1,10 +1,11 @@
 const fs = require('fs');
-const glob = require('glob');
+const {glob} = require('glob');
 const ts = require('typescript');
 const UglifyJS = require('uglify-js');
 const sass = require('sass');
 const postcss = require('postcss');
 const cssnano = require('cssnano');
+const { exec } = require('child_process');
 
 let scriptsRunning = false;
 let stylesRunning = false;
@@ -29,11 +30,11 @@ function updateScripts(){
     fs.rmSync('./js', { recursive: true, force: true }); // clean up directory
     fs.mkdirSync('./js');
 
-    glob("./ts/*.ts", null, function (er, files) {
+    glob("./ts/*.ts").then(files => {
         files.forEach(file => {
             let startTime = performance.now();
 
-            let jsfilename = file.replace("./ts/","./js/").replace(".ts",".js");
+            let jsfilename = file.replace("ts/","js/").replace(".ts",".js");
 
             data = fs.readFileSync(file,'utf8');
             
@@ -53,7 +54,7 @@ function updateScripts(){
                 mangle: true,
                 sourceMap: {
                     content: tempResSource,
-                    url: jsfilename.replace("./js/","") + '.map'
+                    url: jsfilename.replace("js/","") + '.map'
                 }
             });
             
@@ -75,7 +76,7 @@ function updateStyles(){
     fs.rmSync('./css', { recursive: true, force: true }); // clean up directory
     fs.mkdirSync('./css');
 
-    glob("./scss/*.scss", null, function (er, files) {
+    glob("./scss/*.scss").then(files => {
         files.forEach(file => {
             //skip scss files with underscore at the start of their name (i.e. _global.scss)
             if(!/scss\/\_/.test(file)){
@@ -102,8 +103,8 @@ function updateStyles(){
                                 prev: JSON.stringify(res.sourceMap)
                             }
                         }).then(result => {
-                            let cssfilename = file.replace("./scss/","./css/").replace(".scss",".css");
-                            fs.writeFileSync(cssfilename, result.css + "\n/*# sourceMappingURL=" + cssfilename.replace("./css/","") + ".map */");
+                            let cssfilename = file.replace("scss/","css/").replace(".scss",".css");
+                            fs.writeFileSync(cssfilename, result.css + "\n/*# sourceMappingURL=" + cssfilename.replace("css/","") + ".map */");
                             fs.writeFileSync(cssfilename + '.map', result.map.toString());
                             let diff = ((performance.now() - startTime)/1000).toFixed(3);
                             let size = (fs.statSync(cssfilename).size / 1024).toFixed(2);
