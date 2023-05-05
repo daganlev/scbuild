@@ -47,7 +47,7 @@ function updateScripts(){
 
             let [tempResJS, tempResSource] = tmpRes.split("//# sourceMappingURL=data:application/json;base64,");
             tempResSource = Buffer.from(tempResSource, 'base64').toString('utf8') ;
-            tempResSource = tempResSource.replace('"sources":[', '"sources":[".' + file + '",');
+            tempResSource = tempResSource.replace('"sources":[', '"sources":["../' + file + '",');
 
             let tmpFile = UglifyJS.minify(tempResJS,  { 
                 compress: true,
